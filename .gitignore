@@ -3,3 +3,5 @@ node_modules
 .expo
 build
 dist
+firebase-key.json
+*firebase*key*.json
