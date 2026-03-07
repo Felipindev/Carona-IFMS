@@ -11,9 +11,7 @@ router.post('/', async (req, res) => {
         origem, 
         destino,
         data_hora,
-        vagas,
-        passageiros: [],
-        criado_em: new Date()
+        vagas
     } = req.body;
 
     if (!id_motorista || !origem || !destino || !data_hora || !vagas) {
@@ -104,6 +102,105 @@ router.post('/:id/entrar', async (req,res) => {
     } catch (error) {
         console.log("erro: não foi possivel entrar na carona" , error);
         res.status(500).json({ error: 'Erro ao entrar na carona' });
+    }
+})
+
+//rota para listar as caronas
+router.get('/', async (req, res) => {
+    try {
+        const caronasDados = await db.collection('caronas').get();
+        const caronas = [];
+        caronasDados.forEach((doc) => {
+            caronas.push({ id: doc.id, ...doc.data() });
+        });
+        res.json(caronas);
+    } catch (error) {
+        console.log("erro: não foi possivel listar as caronas" , error);
+        res.status(500).json({ error: 'Erro ao listar as caronas' });
+    }
+})
+
+//carona especifica
+router.get('/:id', async (req, res) => {
+    const id_carona = req.params.id;
+
+    if (!id_carona) {
+        return res.status(400).json({ error: 'ID da carona é obrigatório' });
+    }
+
+    try {
+        const caronaDados = await db.collection('caronas').doc(id_carona).get();
+        if (!caronaDados.exists) {
+            return res.status(404).json({ error: 'Carona não encontrada' });
+        }
+        res.json({ id: caronaDados.id, ...caronaDados.data() });
+    } catch (error) {
+        console.log("erro: não foi possivel listar a carona" , error);
+        res.status(500).json({ error: 'Erro ao listar a carona' });
+    }
+})
+
+//sair da carona
+router.post('/:id/sair', async (req, res) => {
+    const id_carona = req.params.id;
+    const { id_usuario } = req.body;
+
+    try {
+        const carona = await db.collection('caronas').doc(id_carona).get();
+        if (!carona.exists) {
+            return res.status(404).json({ error: 'Carona não encontrada' });
+        }
+
+        const dadosCarona = carona.data();
+
+        if (!dadosCarona.passageiros.includes(id_usuario)) {
+            return res.status(403).json({ error: 'Usuário não está na carona' });
+        }
+
+        //arrayRemove pra tirar o usuario dos passageiros
+        await db.collection('caronas').doc(id_carona).update({
+            passageiros: admin.firestore.FieldValue.arrayRemove(id_usuario)
+        })
+        res.status(200).json({ message: 'Usuário saiu da carona com sucesso' });
+    } catch (error) {
+        console.log("erro: não foi possivel sair da carona" , error);
+        res.status(500).json({ error: 'Erro ao sair da carona' });
+    }
+})
+
+//cancelar carona status = cancelada
+router.post('/:id/cancelar', async (req, res) => {
+    const id_carona = req.params.id;
+    const id_usuario = req.body.id_usuario;
+
+    if (!id_carona || !id_usuario) {
+        return res.status(400).json({ error: 'ID da carona e ID do usuário é obrigatório' });
+    }
+
+    try {
+        const carona = await db.collection('caronas').doc(id_carona).get();
+        const dadosUsuario = await db.collection('usuarios').doc(id_usuario).get();
+
+        if (!dadosUsuario.exists) {
+            return res.status(404).json({ error: 'Usuário não encontrado' });
+        }
+        if (!carona.exists) {
+            return res.status(404).json({ error: 'Carona não encontrada' });
+        }
+
+        if (carona.data().id_motorista !== id_usuario) {
+        return res.status(403).json({ error: 'Apenas o motorista pode cancelar a carona' });
+        }
+
+
+        await db.collection('caronas').doc(id_carona).update({
+            status: 'cancelada'
+        })
+        res.status(200).json({ message: 'Carona cancelada com sucesso' });
+    } catch (error) {
+        console.log("não foi possível cancelar a carona", error);
+        res.status(500).json({ error: 'Erro ao cancelar a carona' });
+        
     }
 })
 
