@@ -42,10 +42,13 @@ router.post('/', async (req, res) => {
     try {
         const dadosCarona = {
             id_motorista,
+            motorista_nome: usuario.data().nome,
+            motorista_foto: usuario.data().foto_url,
             origem, 
             destino,
             data_hora: new Date(data_hora),
             passageiros: [],
+            passageiros_info: [],
             status: 'ativa',
             vagas,
             criado_em: new Date()
@@ -93,9 +96,23 @@ router.post('/:id/entrar', async (req,res) => {
             return res.status(403).json({ error: 'Usuário já está na carona' });
         }
 
+        //dados do usuario para adicionar no array de passageiros_info
+        const usuario = await db.collection('usuarios').doc(id_usuario).get();
+        if (!usuario.exists) {
+            return res.status(404).json({ error: 'Usuário não encontrado' });
+        }
+        const dadosUsuario = usuario.data();
+
         //adicionar usuario ao array de passageiros
         await db.collection('caronas').doc(id_carona).update({
-            passageiros: admin.firestore.FieldValue.arrayUnion(id_usuario)
+            passageiros: admin.firestore.FieldValue.arrayUnion(id_usuario),
+
+            //adicionar informações do usuario ao array de passageiros_info (economiza consultas)
+            passageiros_info: admin.firestore.FieldValue.arrayUnion({
+                id_usuario,
+                nome: dadosUsuario.nome,
+                foto_url: dadosUsuario.foto_url
+            })
         })
 
         res.status(200).json({ message: 'Usuário entrou na carona com sucesso' });
