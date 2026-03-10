@@ -1,21 +1,51 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import {NavigationContainer} from "@react-navigation/native"
+import {createBottomTabNavigator} from "@react-navigation/bottom-tabs"
+import { MaterialIcons } from '@expo/vector-icons';
+
+import CriarCaronas from "./src/screens/CriarCaronas"
+import ListaCaronas from "./src/screens/ListaCaronas"
+import MinhasCaronas from "./src/screens/MinhasCaronas"
+import Perfil from "./src/screens/Perfil"
+
+const Tab = createBottomTabNavigator();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <Text>Palemrias nao tem mundial</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Tab.Navigator>
+        <Tab.Screen name="Criar" component={CriarCaronas} 
+          options={{
+            tabBarIcon: ({ size, color }) => (
+              <MaterialIcons name="add-circle" size={size} color={color} />
+            ),
+            headerShown: false,
+          }}
+        />
+        <Tab.Screen name="Caronas" component={ListaCaronas} 
+          options={{
+              tabBarIcon: ({ size, color }) => (
+                <MaterialIcons name="directions-car" size={size} color={color} />
+              ),
+              headerShown: false,
+            }}
+        />
+        <Tab.Screen name="Minhas" component={MinhasCaronas} 
+          options={{
+            tabBarIcon: ({ size, color }) => (
+              <MaterialIcons name="list" size={size} color={color} />
+            ),
+            headerShown: false,
+          }}
+        />
+        <Tab.Screen name="Perfil" component={Perfil} 
+          options={{
+            tabBarIcon: ({ size, color }) => (
+              <MaterialIcons name="person" size={size} color={color} />
+            ),
+            headerShown: false,
+          }}
+        />
+      </Tab.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
