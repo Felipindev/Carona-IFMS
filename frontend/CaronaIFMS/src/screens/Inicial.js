@@ -1,4 +1,5 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from "@react-navigation/native";
 
 export default function Inicial() {
@@ -14,18 +15,23 @@ export default function Inicial() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.welcome}>Seja Bem-vindo!</Text>
-            <Image source={require("../../assets/logo.png")} style={styles.logo} />
-            <Text style={styles.title}>Carona IFMS</Text>
-            <Text style={styles.subtitle}>Facilite suas caronas no IFMS</Text>
-            <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.button} onPress={TelaLogin}>
-                    <Text style={styles.buttonText}>Entrar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.button, styles.outlineButton]} onPress={TelaCadastro}>
-                    <Text style={[styles.buttonText, styles.outlineText]}>Cadastrar</Text>
-                </TouchableOpacity>
+            <View style={styles.welcomeContainer}>
+                <Image source={require("../../assets/logo.png")} style={styles.logo} />
+                <Text style={styles.textUpper}>ENCONTRE OU OFEREÇA</Text>
+                <Text style={styles.welcome}> caronas entre alunos do IFMS.</Text>
             </View>
+            <LinearGradient colors={['#49be39', '#122e13']} style={styles.content}>
+                <Text style={styles.title}>Carona IFMS</Text>
+                <Text style={styles.subtitle}>Facilite suas viagens e economize combustível</Text>
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity style={styles.button} onPress={TelaLogin}>
+                        <Text style={styles.buttonText}>Entrar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.button, styles.outlineButton]} onPress={TelaCadastro}>
+                        <Text style={[styles.buttonText, styles.outlineText]}>Cadastrar</Text>
+                    </TouchableOpacity>
+                </View>
+            </LinearGradient>
         </View>
     );
 }
@@ -36,49 +42,78 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 20,
     },
     welcome: {
-        fontSize: 30,
-        fontFamily: 'Roboto-Bold',
-        fontWeight: '600',
+        fontSize: 20,
+        fontFamily: 'Poppins_700Bold',
         color: '#000',
-        marginBottom: 20,
+        paddingHorizontal: 20,
+        textAlign: 'center',
+    },
+    welcomeContainer: {
+        alignItems: 'center',
+        position: 'absolute',
+        top: 110,
     },
     logo: {
-        width: 300,
-        height: 300,
+        width: 200,
+        height: 200,
     },
     title: {
         fontSize: 28,
-        fontFamily: 'Roboto-Bold',
-        fontWeight: '600',
-        color: '#000',
+        fontFamily: 'Poppins_700Bold',
+        color: '#fff',
         marginBottom: 10,
+        marginTop: 20,
     },
     subtitle: {
         fontSize: 16,
-        fontFamily: 'Roboto-Regular',
-        fontWeight: '400',
-        color: '#333',
+        fontFamily: 'Poppins_400Regular',
+        color: '#fff',
         marginBottom: 40,
         textAlign: 'center',
+    },
+    textUpper: {
+        backgroundColor: '#3a992e',
+        color: '#fff',
+        paddingHorizontal: 20,
+        paddingVertical: 6,
+        borderRadius: 10,
+        overflow: 'hidden',
+        fontFamily: "Poppins_600SemiBold",
+        marginBottom: 10,
+    },
+    content: {
+        alignItems: 'center',
+        backgroundColor: '#3a992e',
+        width: '100%',
+        padding: 30,
+        borderTopLeftRadius: 50,
+        borderTopRightRadius: 50,
+        position: 'absolute',
+        bottom: 0,
+        height: '45%',
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '80%',
+        width: '100%',
     },
     button: {
         backgroundColor: '#4CAF50',
         width: '45%',
-        paddingVertical: 12,
+        paddingVertical: 20,
         borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 5,
     },
     outlineButton: {
-        backgroundColor: 'transparent',
+        backgroundColor: '#fff',
         borderWidth: 2,
-        borderColor: '#4CAF50',
+        borderColor: '#d2ecd3',
     },
     buttonText: {
         color: '#fff',
