@@ -69,7 +69,7 @@ router.get('/:id', async (req,res) => {
 //rota para atualizar usuario
 router.put('/atualizar/:id', async (req,res) => {
     const id_usuario = req.params.id;
-    const { nome, email, tipo, campus, foto, pode_dirigir } = req.body;
+    const { nome, email, tipo, campus, curso, telefone, foto, pode_dirigir } = req.body;
 
     if (!id_usuario){
         return res.status(400).json({ error: 'ID do usuário é obrigatório' });
@@ -86,6 +86,8 @@ router.put('/atualizar/:id', async (req,res) => {
             email: email || usuariosDados.data().email,
             tipo: tipo || usuariosDados.data().tipo,
             campus: campus || usuariosDados.data().campus,
+            curso: curso || usuariosDados.data().curso,
+            telefone: telefone || usuariosDados.data().telefone,
             foto: foto || usuariosDados.data().foto,
             pode_dirigir: pode_dirigir !== undefined ? pode_dirigir : usuariosDados.data().pode_dirigir,
             atualizado_em: new Date()

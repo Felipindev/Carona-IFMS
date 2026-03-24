@@ -3,6 +3,8 @@ import { useState } from "react";
 import { auth } from "../services/firebaseConfig";
 import { useNavigation } from "@react-navigation/native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../services/firebaseConfig";
 
 
 export default function Cadastro() {
@@ -28,6 +30,17 @@ export default function Cadastro() {
             );
             const user = userCredential.user;
             console.log("Usuário criado:", user.email);
+            await setDoc(doc(db, "usuarios", user.uid), {
+                nome,
+                email,
+                telefone: whatsapp,
+                curso: "",
+                campus: "",
+                tipo: "aluno",
+                foto: "",
+                pode_dirigir: false,
+                criado_em: new Date()
+            });
             navigation.navigate("Login");
         } catch (error) {
             alert(error.message);
