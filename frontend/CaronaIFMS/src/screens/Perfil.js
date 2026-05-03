@@ -1,9 +1,10 @@
 import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, TextInput, Switch } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { signOut } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../services/firebaseConfig";
 import { db } from "../services/firebaseConfig";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { useState, useEffect } from "react";
 
 export default function Perfil({ navigation }) {
@@ -54,7 +55,13 @@ export default function Perfil({ navigation }) {
   }
 
   useEffect(() => {
-    carregarPerfil();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        carregarPerfil();
+      }
+    });
+
+    return unsubscribe;
   }, []);
 
   function abrirModal() {
@@ -74,17 +81,17 @@ export default function Perfil({ navigation }) {
     try {
       const user = auth.currentUser;
 
-      await updateDoc(doc(db, "usuarios", user.uid), {
-        nome: nomeEdit,
-        email: emailEdit,
-        tipo: tipoEdit,
-        campus: campusEdit,
-        curso: cursoEdit,
-        telefone: telefoneEdit,
-        foto: fotoEdit,
-        pode_dirigir: podeDirigirEdit,
-        atualizado_em: new Date()
-      });
+    await setDoc(doc(db, "usuarios", user.uid), {
+      nome: nomeEdit,
+      email: emailEdit,
+      tipo: tipoEdit,
+      campus: campusEdit,
+      curso: cursoEdit,
+      telefone: telefoneEdit,
+      foto: fotoEdit,
+      pode_dirigir: podeDirigirEdit,
+      atualizado_em: new Date()
+    }, { merge: true });
 
       setNome(nomeEdit);
       setEmail(emailEdit);
@@ -153,7 +160,7 @@ export default function Perfil({ navigation }) {
             />
             <TextInput
               style={styles.modalInput}
-              placeholder="Telefoe"
+              placeholder="Telefone"
               value={telefoneEdit}
               onChangeText={setTelefoneEdit}
             />

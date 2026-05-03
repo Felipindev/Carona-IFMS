@@ -1,70 +1,101 @@
-import { View, Text, ScrollView, StyleSheet, TextInput, Image } from "react-native";
+import { View, Text, StyleSheet, TextInput, Image, FlatList, TouchableOpacity } from "react-native";
+import { useState, useEffect } from "react";
 
 export default function ListaCaronas() {
+    const [caronas, setCaronas] = useState([]);
+
+    useEffect(() => {
+        carregarCaronas();
+    }, []);
+
+    async function carregarCaronas() {
+        try {
+            const response = await fetch("http://192.168.0.8:3000/caronas");
+            const data = await response.json();
+
+            // filtrar só ativas
+            const ativas = data.filter(c => c.status === "ativa");
+
+            setCaronas(ativas);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    function formatarData(timestamp) {
+        if (!timestamp?._seconds) return "";
+        const data = new Date(timestamp._seconds * 1000);
+        return data.toLocaleString();
+    }
+
     return (
-        <ScrollView style={{ backgroundColor: '#fff' }} contentContainerStyle={styles.container}>
-            <View style={styles.topBar}>
-                <Image source={require("../../assets/logo.png")} style={styles.logoSmall} />
-                <Text style={styles.topBarTitle}>Lista de Caronas</Text>
-                <View style={styles.notificationDot} />
-            </View>
+        <FlatList
+            data={caronas}
+            keyExtractor={(item) => item.id}
 
-            <View style={styles.greetingContainer}>
-                <Text style={styles.greetingTitle}>Oi, Usuário!</Text>
-                <Text style={styles.greetingSubtitle}>Bom dia</Text>
-            </View>
+            numColumns={2}
 
-            <View style={styles.searchContainer}>
-                <TextInput style={styles.input} placeholder="Pesquisar caronas..." placeholderTextColor="#bbb" />
-            </View>
+            contentContainerStyle={styles.container}
 
-            <View style={styles.welcomeCard}>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.welcomeTitle}>Bem-vindo!</Text>
-                    <Text style={styles.welcomeSubtitle}>Pesquise caronas disponíveis!</Text>
-                </View>
-                <Image source={require("../../assets/logo.png")} style={styles.welcomeImage} />
-            </View>
+            ListHeaderComponent={
+                <>
+                    <View style={styles.topBar}>
+                        <Image source={require("../../assets/logo.png")} style={styles.logoSmall} />
+                        <Text style={styles.topBarTitle}>Lista de Caronas</Text>
+                        <View style={styles.notificationDot} />
+                    </View>
 
-            <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionHeader}>Caronas em andamento</Text>
-                <Text style={styles.sectionViewAll}>ver todas</Text>
-            </View>
-            <ScrollView>
-                <View style={styles.caronasGrid}>
-                    <View style={styles.caronaCard}>
-                        <Text style={styles.caronaCardTitle}>Carona 1</Text>
-                        <Text style={styles.caronaCardSubtitle}>Progresso 80%</Text>
+                    <View style={styles.greetingContainer}>
+                        <Text style={styles.greetingTitle}>Oi, Usuário!</Text>
+                        <Text style={styles.greetingSubtitle}>Bom dia</Text>
                     </View>
-                    <View style={styles.caronaCard}>
-                        <Text style={styles.caronaCardTitle}>Carona 2</Text>
-                        <Text style={styles.caronaCardSubtitle}>Progresso 50%</Text>
+
+                    <View style={styles.searchContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Pesquisar caronas..."
+                            placeholderTextColor="#bbb"
+                        />
                     </View>
-                    <View style={styles.caronaCard}>
-                        <Text style={styles.caronaCardTitle}>Carona 3</Text>
-                        <Text style={styles.caronaCardSubtitle}>Progresso 40%</Text>
+
+                    <View style={styles.welcomeCard}>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.welcomeTitle}>Bem-vindo!</Text>
+                            <Text style={styles.welcomeSubtitle}>Pesquise caronas disponíveis!</Text>
+                        </View>
+                        <Image source={require("../../assets/logo.png")} style={styles.welcomeImage} />
                     </View>
-                    <View style={styles.caronaCard}>
-                        <Text style={styles.caronaCardTitle}>Carona 4</Text>
-                        <Text style={styles.caronaCardSubtitle}>Progresso 60%</Text>
+
+                    <View style={styles.sectionHeaderRow}>
+                        <Text style={styles.sectionHeader}>Caronas em andamento</Text>
+                        <Text style={styles.sectionViewAll}>ver todas</Text>
                     </View>
-                    <View style={styles.caronaCard}>
-                        <Text style={styles.caronaCardTitle}>Carona 5</Text>
-                        <Text style={styles.caronaCardSubtitle}>Progresso 60%</Text>
+                </>
+            }
+
+            renderItem={({ item }) => (
+                <TouchableOpacity style={styles.caronaCard}>
+                    <View>
+                        <Text style={styles.caronaCardTitle}>
+                            {item.origem} → {item.destino}
+                        </Text>
+
+                        <Text style={styles.caronaCardSubtitle}>
+                            {formatarData(item.data_hora)}
+                        </Text>
+
+                        <Text style={styles.caronaCardSubtitle}>
+                            {item.vagas} vagas
+                        </Text>
                     </View>
-                    <View style={styles.caronaCard}>
-                        <Text style={styles.caronaCardTitle}>Carona 6</Text>
-                        <Text style={styles.caronaCardSubtitle}>Progresso 60%</Text>
-                    </View>
-                </View>
-            </ScrollView>
-        </ScrollView>
+                </TouchableOpacity>
+            )}
+        />
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        padding: 0,
         paddingBottom: 32,
         backgroundColor: '#fff',
     },
@@ -92,7 +123,6 @@ const styles = StyleSheet.create({
         height: 16,
         borderRadius: 8,
         backgroundColor: '#49be39',
-        marginLeft: 8,
     },
     greetingContainer: {
         paddingHorizontal: 20,
@@ -133,17 +163,11 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         marginTop: 18,
         padding: 18,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-        elevation: 2,
     },
     welcomeTitle: {
         fontSize: 18,
         fontFamily: "Poppins_600SemiBold",
         color: '#49be39',
-        marginBottom: 2,
     },
     welcomeSubtitle: {
         fontSize: 14,
@@ -174,23 +198,12 @@ const styles = StyleSheet.create({
         color: '#49be39',
         fontFamily: "Poppins_600SemiBold",
     },
-    caronasGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-    },
     caronaCard: {
         backgroundColor: '#49be39',
         borderRadius: 16,
-        width: '47%',
-        marginBottom: 16,
+        flex: 1,
+        margin: 10,
         padding: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.10,
-        shadowRadius: 4,
-        elevation: 2,
     },
     caronaCardTitle: {
         color: '#fff',
