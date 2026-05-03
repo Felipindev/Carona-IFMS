@@ -1,13 +1,49 @@
-import { View, Text, StyleSheet, TextInput, Image, FlatList, TouchableOpacity } from "react-native";
-import { useState, useEffect } from "react";
+import { View, Text, StyleSheet, TextInput, Image, FlatList, TouchableOpacity, Modal } from "react-native";
+import { useState, useEffect } from "react"
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { auth, db } from "../services/firebaseConfig";
 
 export default function ListaCaronas() {
+    const user = auth.currentUser;
+    const [usuario, setUsuario] = useState([]);
     const [caronas, setCaronas] = useState([]);
+    const [caronaSelecionada, setCaronaSelecionada] = useState(null);
+    const [modalVisible, setModalVisible] = useState(false);
 
     useEffect(() => {
         carregarCaronas();
+        carregarPerfil();
     }, []);
 
+    async function carregarPerfil() {
+        try {
+            const user = auth.currentUser;
+
+            if (!user) {
+                console.log("Usuário não logado");
+                return;
+            }
+
+            const docRef = doc(db, "usuarios", user.uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const dados = docSnap.data();
+
+                setUsuario({
+                    id: user.uid,
+                    nome: dados.nome
+                });
+
+                console.log("Usuário carregado:", dados.nome);
+            } else {
+                console.log("Documento não existe");
+            }
+
+        } catch (error) {
+            console.error("Erro ao carregar perfil:", error);
+        }
+    }
     async function carregarCaronas() {
         try {
             const response = await fetch("http://192.168.0.8:3000/caronas");
@@ -20,6 +56,30 @@ export default function ListaCaronas() {
         } catch (error) {
             console.log(error);
         }
+    }
+
+    async function entrarCarona(carona) {
+        try {
+            console.log(carona.id);
+            const response = await fetch(`http://192.168.0.8:3000/caronas/${carona.id}/entrar`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ id_usuario: user.uid }) // Substitua pelo ID do usuário logado
+            });
+            const data = await response.json();
+            console.log("Entrou na carona:", data);
+        } catch (error) {
+            console.error("Erro ao entrar na carona:", error);
+        }
+    }
+    
+    function abrirModal(item) {
+        setCaronaSelecionada(item);
+        console.log(item);
+    
+        setModalVisible(true);
     }
 
     function formatarData(timestamp) {
@@ -46,7 +106,7 @@ export default function ListaCaronas() {
                     </View>
 
                     <View style={styles.greetingContainer}>
-                        <Text style={styles.greetingTitle}>Oi, Usuário!</Text>
+                        <Text style={styles.greetingTitle}>Oi, {usuario?.nome}!</Text>
                         <Text style={styles.greetingSubtitle}>Bom dia</Text>
                     </View>
 
@@ -70,11 +130,40 @@ export default function ListaCaronas() {
                         <Text style={styles.sectionHeader}>Caronas em andamento</Text>
                         <Text style={styles.sectionViewAll}>ver todas</Text>
                     </View>
+
+                    <Modal visible={modalVisible} transparent animationType="slide">
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalContent}>
+                            
+                            <Text style={styles.welcomeTitle}>Detalhes da Carona</Text>
+                            <Text style={styles.welcomeSubtitle}>Motorista: {caronaSelecionada?.motorista_nome}</Text>
+                            <Text style={styles.welcomeSubtitle}>
+                                Vagas disponíveis: {caronaSelecionada ? 
+                                caronaSelecionada.vagas - caronaSelecionada.passageiros.length : 0}
+                            </Text>
+                            <Text style={styles.welcomeSubtitle}>Passageiros: {caronaSelecionada?.passageiros.map(p => p.nome).join(", ") || "Nenhum"}</Text>
+
+                            <Text>{caronaSelecionada?.origem} → {caronaSelecionada?.destino}</Text>
+                            <Text>{formatarData(caronaSelecionada?.data_hora)}</Text>
+                            <Text style={styles.welcomeSubtitle}>Status: {caronaSelecionada?.status}</Text>
+
+                            <TouchableOpacity onPress={() => entrarCarona(caronaSelecionada)} style={styles.exitButton}>
+                                <Text style={{color: "#fff"}}>Entrar na carona</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.exitButton}>
+                                <Text style={{color: "#fff"}}>Fechar</Text>
+                            </TouchableOpacity>
+
+                            </View>
+                        </View>
+                    </Modal>
+
                 </>
             }
 
             renderItem={({ item }) => (
-                <TouchableOpacity style={styles.caronaCard}>
+                <TouchableOpacity style={styles.caronaCard} onPress={() => abrirModal(item)}>
                     <View>
                         <Text style={styles.caronaCardTitle}>
                             {item.origem} → {item.destino}
@@ -98,6 +187,25 @@ const styles = StyleSheet.create({
     container: {
         paddingBottom: 32,
         backgroundColor: '#fff',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 20,
+        alignItems: 'center',
+    },
+    exitButton: {
+        marginTop: 20,
+        backgroundColor: '#49be39',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 8,
     },
     topBar: {
         flexDirection: 'row',

@@ -111,7 +111,7 @@ router.post('/:id/entrar', async (req,res) => {
             passageiros_info: admin.firestore.FieldValue.arrayUnion({
                 id_usuario,
                 nome: dadosUsuario.nome,
-                foto_url: dadosUsuario.foto_url
+                foto: dadosUsuario.foto
             })
         })
 
