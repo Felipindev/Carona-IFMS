@@ -1,13 +1,15 @@
 import { View, Text, StyleSheet, TextInput, Switch, TouchableOpacity } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { useState, useEffect } from "react";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { auth } from "../services/firebaseConfig";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Login({ navigation }) {
     const [rememberMe, setRememberMe] = useState(false);
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
+    const [mostrarSenha, setMostrarSenha] = useState(false);
 
     async function  HandleLogin() {
         try {
@@ -21,12 +23,35 @@ export default function Login({ navigation }) {
 
         console.log("Usuário logado:", user.email);
 
-        navigation.navigate("Tabs");
+        if (rememberMe) {
+            await AsyncStorage.setItem("rememberMe", "true")
+        } else {
+            await AsyncStorage.removeItem("rememberMe")
+        }
+
+        navigation.replace("Tabs");
         } catch (error) {
             console.log("Erro:", error)
             alert("Erro ao conectar com servidor")
         }
     }
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+
+            const lembrar = await AsyncStorage.getItem("rememberMe");
+
+            console.log("USER:", user?.email);
+            console.log("LEMBRAR:", lembrar);
+
+            // se existe usuário E lembrar-me está ativado
+            if (user && lembrar === "true") {
+                navigation.replace("Tabs");
+            }
+        });
+
+        return unsubscribe;
+    }, [])
 
     return (
         <LinearGradient
@@ -44,17 +69,30 @@ export default function Login({ navigation }) {
                         value={email}
                         onChangeText={setEmail}
                     />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Senha"
-                        placeholderTextColor="#777"
-                        secureTextEntry
-                        value={senha}
-                        onChangeText={setSenha}
-                    />
+                <View style={styles.passwordContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Senha"
+                            placeholderTextColor="#777"
+                            secureTextEntry={!mostrarSenha}
+                            value={senha}
+                            onChangeText={setSenha}
+                        />
+                        <TouchableOpacity
+                            onPress={() => setMostrarSenha(!mostrarSenha)}
+                            style={styles.showPassword}
+                        >
+                            <Text style={{ color: '#777', fontSize: 12 }}>
+                                {mostrarSenha ? 'Ocultar Senha' : 'Mostrar Senha'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                     <View style={styles.options}>
                         <View style={styles.rememberContainer}>
-                            <Switch />
+                            <Switch 
+                                value={rememberMe}
+                                onValueChange={setRememberMe}
+                            />
                             <Text style={styles.optionText}>Lembrar-me</Text>
                         </View>
                         <TouchableOpacity>
@@ -117,6 +155,24 @@ const styles = StyleSheet.create({
     form: {
         width: "100%",
         alignItems: "center"
+    },
+
+    passwordContainer: {
+        width: "100%",
+        position: "relative",
+
+    },
+
+    showPassword: { 
+        position: 'absolute', 
+        right: 15, 
+        top: 13, 
+        backgroundColor: '#fff', 
+        fontSize: 10,
+        padding: 5, 
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#ccc', 
     },
 
     input: {
